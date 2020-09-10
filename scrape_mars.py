@@ -109,24 +109,30 @@ def hemisphere_url():
     hemisphere_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
     browser.visit(hemisphere_url)
 
-    hemisphere_list = []
+    html_hemis = browser.html
+    soup_hemis = bs(html_hemis, "html.parser")
 
-    all_links_url = browser.find_by_css("a.product-item h3")
-    for x in range(len(all_links_url)):
-        hemi = {}
+    all_links_url = soup_hemis.find_all('div', class_='item')
+    hemisphere_list = []
+    core_url = "https://astrogeology.usgs.gov"
+    #all_links_url = browser.find_by_css("a.product-item h3")
+    for x in all_links_url:
+        #hemi = {}
     
         #find element in each loop 
-        browser.find_by_css("a.product-item h3")[x].click()
+        title = x.find('h3').text
         
         #find sample tag and extract href 
-        sample_tag = browser.find_link_by_text("Sample").first
-        hemi["img_url"] = sample_tag["href"]
+        sample_tag = x.find('a', class_='itemLink product-item')['href']
+        browser.visit(core_url + sample_tag)
         
-        #extract title 
-        hemi["title"] = browser.find_by_css("h2.title").text
+        sample_tag_html = browser.html
+        soup_each_hemis = bs(sample_tag_html, 'html.parser')
+        #extract image 
+        full_image = core_url + soup_each_hemis.find('img', class_='wide-image')['src']
         
         #append object to list 
-        hemisphere_list.append(hemi)
+        hemisphere_list.append({"title": title, "img_url":full_image})
         
     browser.quit()
     return hemisphere_list
